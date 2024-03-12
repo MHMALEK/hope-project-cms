@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>VPN List</title>
+  </head>
+  <body>
+    <h1>List of VPNs</h1>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>URL</th>
+        <th>Actions</th>
+      </tr>
+      {% for vpn in vpns %}
+      <tr>
+        <td>{{ vpn.name }}</td>
+        <td>{{ vpn.url }}</td>
+        <td>
+          <button class="delete-btn" data-id="{{ vpn.id }}">Delete</button>
+          <button class="edit-btn" data-id="{{ vpn.id }}">Edit</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h1>Add a VPN</h1>
+    <!-- Add form -->
+    <form id="vpn-form" action="/api/vpn/create" method="post">
+      <input type="hidden" id="vpn-id" name="id" />
+      <label for="vpn-name">Name:</label><br />
+      <input type="text" id="vpn-name" name="name" required /><br />
+      <label for="vpn-title">Title:</label><br />
+      <input type="text" id="vpn-title" name="title" required /><br />
+      <label for="vpn-description_text">Description Text:</label><br />
+      <textarea
+        id="vpn-description_text"
+        name="description_text"
+        required
+      ></textarea
+      ><br />
+      <label for="vpn-description_html">Description HTML:</label><br />
+      <textarea
+        id="vpn-description_html"
+        name="description_html"
+        required
+      ></textarea
+      ><br />
+      <label for="vpn-website_url">Website URL:</label><br />
+      <input
+        type="text"
+        id="vpn-website_url"
+        name="website_url"
+        required
+      /><br />
+      <label for="vpn-is_free">Is Free:</label><br />
+      <input type="checkbox" id="vpn-is_free" name="is_free" /><br />
+      <label for="vpn-rate">Rate:</label><br />
+      <input type="number" id="vpn-rate" name="rate" required /><br />
+      <label for="vpn-supported_os">Supported OS:</label><br />
+      <input
+        type="text"
+        id="vpn-supported_os"
+        name="supported_os"
+        required
+      /><br />
+      <!-- Download URLs -->
+      <label for="vpn-windows">Windows URL:</label><br />
+      <input type="text" id="vpn-windows" name="windows" /><br />
+      <label for="vpn-mac">Mac URL:</label><br />
+      <input type="text" id="vpn-mac" name="mac" /><br />
+      <label for="vpn-linux">Linux URL:</label><br />
+      <input type="text" id="vpn-linux" name="linux" /><br />
+      <label for="vpn-android">Android URL:</label><br />
+      <input type="text" id="vpn-android" name="android" /><br />
+      <label for="vpn-ios">iOS URL:</label><br />
+      <input type="text" id="vpn-ios" name="ios" /><br />
+      <input type="submit" value="Add VPN" />
+    </form>
+    <script>
+      // Select all delete buttons
+      const deleteButtons = document.querySelectorAll(".delete-btn");
+
+      // Add a click event listener to each button
+      deleteButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+          // Prevent the default button click behavior
+          event.preventDefault();
+
+          // Get the ID of the VPN from the data-id attribute
+          const id = event.target.dataset.id;
+
+          // Make an HTTP DELETE request to your API
+          fetch(`/api/vpn/${id}`, {
+            method: "DELETE",
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              console.log(data);
+              // Remove the VPN row from the table
+              event.target.parentElement.parentElement.remove();
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+      });
+    </script>
+
+    <script>
+      const form = document.getElementById("vpn-form");
+      const editButtons = document.querySelectorAll(".edit-btn");
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        // Get the form data
+        const id = document.getElementById("vpn-id").value;
+        const name = document.getElementById("vpn-name").value;
+        const title = document.getElementById("vpn-title").value;
+        const description_text = document.getElementById(
+          "vpn-description_text"
+        ).value;
+        const description_html = document.getElementById(
+          "vpn-description_html"
+        ).value;
+        const website_url = document.getElementById("vpn-website_url").value;
+        const is_free = document.getElementById("vpn-is_free").checked;
+        const rate = document.getElementById("vpn-rate").value;
+        const supported_os = document
+          .getElementById("vpn-supported_os")
+          .value.split(",");
+        const windows = document.getElementById("vpn-windows").value;
+        const mac = document.getElementById("vpn-mac").value;
+        const linux = document.getElementById("vpn-linux").value;
+        const android = document.getElementById("vpn-android").value;
+        const ios = document.getElementById("vpn-ios").value;
+
+        // Create the vpn object
+        const vpn = {
+          name: name,
+          title: title,
+          description_text: description_text,
+          description_html: description_html,
+          website_url: website_url,
+          is_free: is_free,
+          rate: rate,
+          supported_os: supported_os,
+          download_urls: {
+            windows: [windows],
+            mac: [mac],
+            linux: [linux],
+            android: [android],
+            ios: [ios],
+          },
+        };
+
+        // Determine the API URL and HTTP method based on whether we're adding or editing a VPN
+        let apiUrl = "/api/vpn/create";
+        let httpMethod = "POST";
+        if (id) {
+          apiUrl = `/api/vpn/update/${id}`;
+          httpMethod = "PUT";
+        }
+
+        // Make an HTTP request to your API
+        fetch(apiUrl, {
+          method: httpMethod,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(vpn),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Error: ${response.statusText}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log(data);
+            // Clear the form
+            form.reset();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
+
+      // When the edit button is clicked, populate the form with the VPN's current data
+      editButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+          // Prevent the default button click behavior
+          event.preventDefault();
+
+          // Get the ID of the VPN from the data-id attribute
+          const id = event.target.dataset.id;
+
+          // Make an HTTP GET request to your API
+          fetch(`/api/vpn/${id}`, {
+            method: "GET",
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+              }
+              return response.json();
+            })
+            .then((vpn) => {
+              // Fill the form with the VPN's current data
+              document.getElementById("vpn-id").value = vpn.id;
+              document.getElementById("vpn-name").value = vpn.name;
+              document.getElementById("vpn-title").value = vpn.title;
+              document.getElementById("vpn-description_text").value =
+                vpn.description_text;
+              document.getElementById("vpn-description_html").value =
+                vpn.description_html;
+              document.getElementById("vpn-website_url").value =
+                vpn.website_url;
+              document.getElementById("vpn-is_free").checked = vpn.is_free;
+              document.getElementById("vpn-rate").value = vpn.rate;
+              document.getElementById("vpn-supported_os").value =
+                vpn.supported_os.join(",");
+              document.getElementById("vpn-windows").value =
+                vpn.download_urls.windows.join(",");
+              document.getElementById("vpn-mac").value =
+                vpn.download_urls.mac.join(",");
+              document.getElementById("vpn-linux").value =
+                vpn.download_urls.linux.join(",");
+              document.getElementById("vpn-android").value =
+                vpn.download_urls.android.join(",");
+              document.getElementById("vpn-ios").value =
+                vpn.download_urls.ios.join(",");
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+      });
+    </script>
+  </body>
+</html>
