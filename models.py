@@ -11,7 +11,7 @@ from typing import List, Optional
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
-DATABASE_URL = "sqlite:///" + os.path.join(basedir, "database.db")
+DATABASE_URL = os.environ['DATABASE_URL']
 
 database = Database(DATABASE_URL)
 
