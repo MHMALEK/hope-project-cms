@@ -15,6 +15,9 @@ from auth import security
 from typing import List
 from fastapi import Query
 from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 

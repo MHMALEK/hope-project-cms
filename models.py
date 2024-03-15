@@ -6,18 +6,34 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine
 import os
 from typing import List, Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
-DATABASE_URL = os.environ['DATABASE_URL']
+Base = declarative_base()
+
+conf = {
+    "host": os.environ["DB_HOST"],
+    "port": os.environ["DB_PORT"],
+    "database": os.environ["DB_NAME"],
+    "user": os.environ["DB_USER"],
+    "password": os.environ["DB_PASS"],
+}
+
+
+DATABASE_URL = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}".format(
+    **conf
+)
 
 database = Database(DATABASE_URL)
 
-Base = declarative_base()
 
 engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
